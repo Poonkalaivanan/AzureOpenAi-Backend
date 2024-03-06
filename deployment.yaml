@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-backend
+  labels:
+    app: ai-backend-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-backend-app
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: ai-backend-app
+    spec:
+      containers:
+        - name: open-ai-backend
+          image: <YOUR_IMAGE>
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-backend-service
+spec:
+  type: ClusterIP
+  selector:
+    app: ai-backend-app
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: default
+  name: ai-backend-ingress
+spec:
+  rules:
+    - host: <YOUR_URL>
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: ai-backend-service
+                port:
+                    number: 80
